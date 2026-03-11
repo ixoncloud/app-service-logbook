@@ -21,7 +21,9 @@ DateTimeISO = Annotated[
 
 
 class Note(BaseModel):
-    id: JSONObjectId = Field(default_factory=ObjectId, alias="_id", serialization_alias="_id")
+    id: JSONObjectId = Field(
+        default_factory=ObjectId, alias="_id", serialization_alias="_id"
+    )
     user: str | None = Field(default=None, deprecated=True)
     text: str
     created_on: int = Field(default_factory=lambda: round(time.time() * 1000))
@@ -40,7 +42,9 @@ class Note(BaseModel):
 
 
 class NoteBasic(BaseModel):
-    id: JSONObjectId = Field(default_factory=ObjectId, alias="_id", serialization_alias="_id")
+    id: JSONObjectId = Field(
+        default_factory=ObjectId, alias="_id", serialization_alias="_id"
+    )
     text: str
     created_on: DateTimeISO
 

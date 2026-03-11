@@ -39,13 +39,14 @@ AppDescription(
 @FunctionContext.expose(
     is_agentic=True, requires_human_permission=True, exclude_param_types={NotesClient}
 )
-@notes_endpoint(NoteAdd)
+@notes_endpoint
 def add(
     _: FunctionContext,
     notes_client: NotesClient,
     model: NoteAdd,
 ) -> ErrorResponse[None] | SuccessResponse[Note]:
     """Add a new note to the database."""
+
     note = notes_client.add(model)
 
     if isinstance(note, ErrorResponse):
@@ -55,7 +56,7 @@ def add(
 
 
 @FunctionContext.expose
-@notes_endpoint()
+@notes_endpoint
 def get(
     _: FunctionContext,
     notes_client: NotesClient,
@@ -66,7 +67,7 @@ def get(
 @FunctionContext.expose(
     is_agentic=True, requires_human_permission=False, exclude_param_types={NotesClient}
 )
-@notes_endpoint()
+@notes_endpoint
 def get_all_notes(
     _: FunctionContext,
     notes_client: NotesClient,
@@ -75,7 +76,7 @@ def get_all_notes(
     return SuccessResponse(
         data=[
             NoteBasic(
-                id=note.id,
+                _id=note.id,
                 text=note.text,
                 created_on=datetime.fromtimestamp(note.created_on / 1000),
                 author_name=note.author_name,
@@ -94,15 +95,19 @@ def get_all_notes(
 @FunctionContext.expose(
     is_agentic=True, requires_human_permission=True, exclude_param_types={NotesClient}
 )
-@notes_endpoint(NoteEdit)
+@notes_endpoint
 def edit(
     context: FunctionContext,
     notes_client: NotesClient,
     model: NoteEdit,
 ) -> ErrorResponse[None] | SuccessResponse[Note]:
     """Edit a note in the database."""
-    if context.user is None or not permission_check(context, notes_client, model.note_id):
-        return ErrorResponse(message="You do not have the rights to perform this action")
+    if context.user is None or not permission_check(
+        context, notes_client, model.note_id
+    ):
+        return ErrorResponse(
+            message="You do not have the rights to perform this action"
+        )
 
     note = notes_client.edit(model)
 
@@ -115,15 +120,19 @@ def edit(
 @FunctionContext.expose(
     is_agentic=True, requires_human_permission=True, exclude_param_types={NotesClient}
 )
-@notes_endpoint(NoteRemove)
+@notes_endpoint
 def remove(
     context: FunctionContext,
     notes_client: NotesClient,
     model: NoteRemove,
 ) -> ErrorResponse[None] | SuccessResponse[None]:
     """Remove a note from the database."""
-    if context.user is None or not permission_check(context, notes_client, model.note_id):
-        return ErrorResponse(message="You do not have the rights to perform this action")
+    if context.user is None or not permission_check(
+        context, notes_client, model.note_id
+    ):
+        return ErrorResponse(
+            message="You do not have the rights to perform this action"
+        )
 
     error = notes_client.remove(model.note_id)
 
