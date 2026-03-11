@@ -5,8 +5,8 @@ from operator import add
 from typing import Callable, Concatenate, Iterable
 
 from bson.objectid import ObjectId
-from ixoncdkingress.cbc.context import CbcContext
-from ixoncdkingress.cbc.document_db_client import DocumentDBClient
+from ixoncdkingress.function.context import FunctionContext as CbcContext
+from ixoncdkingress.function.document_db_client import DocumentDBClient
 
 from functions.utils.types import ErrorResponse, Note, NoteAdd, NoteEdit
 
@@ -36,9 +36,7 @@ class NotesClient:
                 or not (context.agent or context.asset)
                 or not context.document_db_client
             ):
-                return ErrorResponse(
-                    message="Agent/Asset, user and DB configuration are required"
-                )
+                return ErrorResponse(message="Agent/Asset, user and DB configuration are required")
 
             client = cls(
                 context.document_db_client,
@@ -66,9 +64,7 @@ class NotesClient:
         self.document_client = document_client
 
         self.in_id_filtermap = {
-            "agent_or_asset_id": {
-                "$in": [idx for idx in {self.agent_or_asset_id, agent_id} if idx]
-            }
+            "agent_or_asset_id": {"$in": [idx for idx in {self.agent_or_asset_id, agent_id} if idx]}
         }
 
         agent_or_asset = self.document_client.find_one(
@@ -76,9 +72,7 @@ class NotesClient:
         )
 
         if agent_or_asset is None:
-            self.document_client.insert_one(
-                {"agent_or_asset_id": agent_or_asset_id, "notes": []}
-            )
+            self.document_client.insert_one({"agent_or_asset_id": agent_or_asset_id, "notes": []})
 
     def add(self, add: NoteAdd) -> Note | ErrorResponse[None]:
         note = Note(

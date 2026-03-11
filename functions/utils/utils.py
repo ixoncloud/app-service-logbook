@@ -1,3 +1,5 @@
+import functools
+import inspect
 from typing import Any, Callable, Concatenate, Optional, ParamSpec, TypeVar, overload
 
 from pydantic import BaseModel, ValidationError
@@ -5,7 +7,7 @@ from pydantic_core import ErrorDetails
 from functions.utils.client import NotesClient
 
 from functions.utils.types import ErrorResponse, Response
-from ixoncdkingress.cbc.context import CbcContext
+from ixoncdkingress.function.context import FunctionContext as CbcContext
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -111,20 +113,24 @@ def notes_endpoint(
     def decorator(
         func: Callable[..., Response[Any]],
     ) -> Callable[Concatenate[CbcContext, P], dict[str, Any]]:
-        def wrapper(
-            context: CbcContext, /, *args: P.args, **kwargs: P.kwargs
-        ) -> dict[str, Any]:
+        @functools.wraps(func)
+        def wrapper(context: CbcContext, /, *args: P.args, **kwargs: P.kwargs) -> dict[str, Any]:
             try:
                 if parse_func:
-                    return json_response(
-                        parse_arguments(parse_func)(NotesClient.inject(func))
-                    )(context, *args, **kwargs)
+                    return json_response(parse_arguments(parse_func)(NotesClient.inject(func)))(
+                        context, *args, **kwargs
+                    )
                 else:
                     return json_response(
                         (NotesClient.inject(func)),
                     )(context, *args, **kwargs)
             except BaseException as e:
                 return ErrorResponse(data=str(e)).model_dump(by_alias=True)
+
+        try:
+            wrapper.__signature__ = inspect.signature(func)
+        except (ValueError, TypeError):
+            pass
 
         return wrapper
 
