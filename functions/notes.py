@@ -43,10 +43,12 @@ AppDescription(
 def add(
     _: FunctionContext,
     notes_client: NotesClient,
-    model: NoteAdd,
+    text: str,
+    subject: str | None = None,
+    category: int | None = None,
 ) -> ErrorResponse[None] | SuccessResponse[Note]:
     """Add a new note to the database."""
-
+    model = NoteAdd(text=text, subject=subject, category=category)
     note = notes_client.add(model)
 
     if isinstance(note, ErrorResponse):
@@ -99,9 +101,13 @@ def get_all_notes(
 def edit(
     context: FunctionContext,
     notes_client: NotesClient,
-    model: NoteEdit,
+    note_id: str,
+    text: str,
+    subject: str | None = None,
+    category: int | None = None,
 ) -> ErrorResponse[None] | SuccessResponse[Note]:
     """Edit a note in the database."""
+    model = NoteEdit(note_id=note_id, text=text, subject=subject, category=category)
     if context.user is None or not permission_check(
         context, notes_client, model.note_id
     ):
@@ -124,9 +130,10 @@ def edit(
 def remove(
     context: FunctionContext,
     notes_client: NotesClient,
-    model: NoteRemove,
+    note_id: str,
 ) -> ErrorResponse[None] | SuccessResponse[None]:
     """Remove a note from the database."""
+    model = NoteRemove(note_id=note_id)
     if context.user is None or not permission_check(
         context, notes_client, model.note_id
     ):

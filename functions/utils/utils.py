@@ -49,12 +49,17 @@ def notes_endpoint(
             pydantic_params = {
                 name: param.annotation
                 for name, param in signature.parameters.items()
-                if issubclass(param.annotation, BaseModel)
+                if (
+                    isinstance(param.annotation, type)
+                    and issubclass(param.annotation, BaseModel)
+                )
             }
             try:
                 for key, value in kwargs.items():
-                    if key in pydantic_params and not isinstance(
-                        value, pydantic_params[key]
+                    if (
+                        key in pydantic_params
+                        and not isinstance(value, pydantic_params[key])
+                        and isinstance(value, dict)
                     ):
                         kwargs[key] = pydantic_params[key](**value)
             except ValidationError as e:

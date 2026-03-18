@@ -11,7 +11,7 @@ def test_add_ok(function_context: FunctionContext):
     function_context.user.public_id = "user00000001"
     function_context.user.name = "Test User"
 
-    result = sut.add(function_context, model={"text": "Test Note"})
+    result = sut.add(function_context, **{"text": "Test Note"})
 
     assert True is result["success"]
 
@@ -34,7 +34,7 @@ def test_add_ok(function_context: FunctionContext):
 def test_add_with_category_and_subject(function_context: FunctionContext):
     result = sut.add(
         function_context,
-        model={
+        **{
             "text": "Test Note",
             "subject": "Test Subject",
             "category": 0,
@@ -52,7 +52,7 @@ def test_add_with_category_and_subject(function_context: FunctionContext):
 def test_get_ok(function_context: FunctionContext):
     sut.add(
         function_context,
-        model={
+        **{
             "text": "Test Note",
             "subject": "Test Subject",
             "category": 0,
@@ -61,7 +61,7 @@ def test_get_ok(function_context: FunctionContext):
 
     sut.add(
         function_context,
-        model={
+        **{
             "text": "Test Note 2",
             "subject": "Test Subject 2",
             "category": 1,
@@ -86,7 +86,7 @@ def test_get_ok(function_context: FunctionContext):
 def test_get_all_notes_ok(function_context: FunctionContext):
     sut.add(
         function_context,
-        model={
+        **{
             "text": "Test Note",
             "subject": "Test Subject",
             "category": 0,
@@ -95,7 +95,7 @@ def test_get_all_notes_ok(function_context: FunctionContext):
 
     sut.add(
         function_context,
-        model={
+        **{
             "text": "Test Note 2",
             "subject": "Test Subject 2",
             "category": 1,
@@ -122,7 +122,7 @@ def test_edit_ok(function_context: FunctionContext):
 
     result = sut.add(
         function_context,
-        model={
+        **{
             "text": "Test Note",
             "subject": "Test Subject",
             "category": 0,
@@ -131,7 +131,7 @@ def test_edit_ok(function_context: FunctionContext):
 
     sut.add(
         function_context,
-        model={
+        **{
             "text": "Test Note 2",
             "subject": "Test Subject 2",
             "category": 1,
@@ -142,7 +142,7 @@ def test_edit_ok(function_context: FunctionContext):
 
     result = sut.edit(
         function_context,
-        model={
+        **{
             "note_id": result["data"]["_id"],
             "text": "Edited Note",
             "subject": "Edited Subject",
@@ -182,7 +182,7 @@ def test_edit_other_user(
 
     result = sut.add(
         function_context,
-        model={
+        **{
             "text": "Test Note",
             "subject": "Test Subject",
             "category": 0,
@@ -196,7 +196,7 @@ def test_edit_other_user(
 
     result = sut.edit(
         function_context,
-        model={
+        **{
             "note_id": result["data"]["_id"],
             "text": "Edited Note",
             "subject": "Edited Subject",
@@ -230,7 +230,7 @@ def test_edit_other_user_no_permission(
 
     result = sut.add(
         function_context,
-        model={
+        **{
             "text": "Test Note",
             "subject": "Test Subject",
             "category": 0,
@@ -244,7 +244,7 @@ def test_edit_other_user_no_permission(
 
     result = sut.edit(
         function_context,
-        model={
+        **{
             "note_id": result["data"]["_id"],
             "text": "Edited Note",
             "subject": "Edited Subject",
@@ -272,14 +272,14 @@ def test_edit_other_user_no_permission(
 def test_remove_ok(function_context: FunctionContext):
     result = sut.add(
         function_context,
-        model={
+        **{
             "text": "Test Note",
             "subject": "Test Subject",
             "category": 0,
         },
     )
 
-    sut.remove(function_context, model={"note_id": result["data"]["_id"]})
+    sut.remove(function_context, **{"note_id": result["data"]["_id"]})
 
     result = sut.get(function_context)
 
@@ -294,7 +294,7 @@ def test_remove_no_permission(
 ):
     result = sut.add(
         function_context,
-        model={
+        **{
             "text": "Test Note",
             "subject": "Test Subject",
             "category": 0,
@@ -305,7 +305,7 @@ def test_remove_no_permission(
     user.name = "User"
     asset.permissions = set()
 
-    result = sut.remove(function_context, model={"note_id": result["data"]["_id"]})
+    result = sut.remove(function_context, **{"note_id": result["data"]["_id"]})
     assert not result["success"]
 
     result = sut.get(function_context)
