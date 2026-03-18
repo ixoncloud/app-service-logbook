@@ -1,2 +1,2 @@
-ixoncdkingress==0.0.21.dev0
-pydantic==2.9.2
+ixoncdkingress==0.0.23
+pydantic==2.10.6

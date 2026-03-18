@@ -5,8 +5,8 @@ from operator import add
 from typing import Callable, Concatenate, Iterable
 
 from bson.objectid import ObjectId
-from ixoncdkingress.cbc.context import CbcContext
-from ixoncdkingress.cbc.document_db_client import DocumentDBClient
+from ixoncdkingress.function.context import FunctionContext as CbcContext
+from ixoncdkingress.function.document_db_client import DocumentDBClient
 
 from functions.utils.types import ErrorResponse, Note, NoteAdd, NoteEdit
 

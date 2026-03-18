@@ -1,63 +1,17 @@
-from typing import Any, Callable, Concatenate, Optional, ParamSpec, TypeVar, overload
+import functools
+import inspect
+from typing import Any, Callable, Concatenate, Optional, ParamSpec, TypeVar
 
 from pydantic import BaseModel, ValidationError
 from pydantic_core import ErrorDetails
 from functions.utils.client import NotesClient
 
 from functions.utils.types import ErrorResponse, Response
-from ixoncdkingress.cbc.context import CbcContext
+from ixoncdkingress.function.context import FunctionContext as CbcContext
 
 P = ParamSpec("P")
 R = TypeVar("R")
 T = TypeVar("T", bound=BaseModel)
-
-
-def parse_arguments(
-    parse_func: Callable[..., T],
-) -> Callable[
-    [Callable[[CbcContext, T], R | ErrorResponse[list[ErrorDetails]]]],
-    Callable[Concatenate[CbcContext, P], R | ErrorResponse[list[ErrorDetails]]],
-]:
-    """ "
-    Takes the given kwargs of the function (except for the CbcContext) and parses them into a
-    pydantic model and adds this to the new function by giving a kwarg `model` with the new pydantic
-    model. Can also be used with a normal function rather than a pydantic model.
-
-    Example:
-    In order to typecheck this:
-    ```python
-    def add(context: CbcContext, note_id: str, text: str):
-    ```
-
-    We can use this:
-    ```python
-    @parse_arguments(NoteEdit)
-    def add(context: CbcContext, model: NoteEdit):
-        assert model.note_id and model.text
-    ```
-
-    Which actually works like this:
-    ```python
-    @parse_arguments(lambda note_id, text: NoteEdit(note_id=note_id, text=text))
-    def add(context: CbcContext, model: NoteEdit):
-        assert model.note_id and model.text
-    ```
-    """
-
-    def decorator(
-        func: Callable[[CbcContext, T], R | ErrorResponse[list[ErrorDetails]]],
-    ) -> Callable[Concatenate[CbcContext, P], R | ErrorResponse[list[ErrorDetails]]]:
-        def wrapper(
-            context: CbcContext, /, *_: P.args, **func_args: P.kwargs
-        ) -> R | ErrorResponse[list[ErrorDetails]]:
-            try:
-                return func(context, parse_func(**func_args))
-            except ValidationError as e:
-                return ErrorResponse(data=e.errors(), message="Exception parsing input")
-
-        return wrapper
-
-    return decorator
 
 
 def json_response(func: Callable[P, Response[T]]) -> Callable[P, dict[str, Any]]:
@@ -72,63 +26,53 @@ def json_response(func: Callable[P, Response[T]]) -> Callable[P, dict[str, Any]]
     return wrapper
 
 
-@overload
 def notes_endpoint(
-    parse_func: None = None,
-) -> Callable[
-    [Callable[Concatenate[CbcContext, NotesClient, P], Response[Any]]],
-    Callable[Concatenate[CbcContext, P], dict[str, Any]],
-]: ...
-
-
-@overload
-def notes_endpoint(
-    parse_func: Callable[..., T],
-) -> Callable[
-    [Callable[[CbcContext, NotesClient, T], Response[Any]]],
-    Callable[Concatenate[CbcContext, P], dict[str, Any]],
-]: ...
-
-
-def notes_endpoint(
-    parse_func: Callable[..., T] | None = None,
-) -> Callable[
-    [Callable[..., Response[Any]]],
-    Callable[Concatenate[CbcContext, P], dict[str, Any]],
-]:
+    func: Callable[Concatenate[CbcContext, NotesClient, P], Response[Any]],
+) -> Callable[Concatenate[CbcContext, P], dict[str, Any]]:
     """
-    Merges the functionality of `json_response`, `parse_arguments` and injects the notes client
-    into the given function. When a parse function is given the kwargs `notes_client` and `model`
-    will both be set. Without a parse function only the `notes_client` is set.
+    Merges the functionality of `json_response`, pydantic parsing and injects the notes client
+    into the given function. It will set `notes_client` and parse any pydantic models.
 
     Example:
     ```python
-    @notes_endpoint(NoteAdd)
+    @notes_endpoint
     def add(context: CbcContext, notes_client: NotesClient, model: NoteAdd):
     ````
     """
 
-    def decorator(
-        func: Callable[..., Response[Any]],
-    ) -> Callable[Concatenate[CbcContext, P], dict[str, Any]]:
-        def wrapper(
-            context: CbcContext, /, *args: P.args, **kwargs: P.kwargs
-        ) -> dict[str, Any]:
+    @functools.wraps(func)
+    def wrapper(
+        context: CbcContext, /, *args: P.args, **kwargs: P.kwargs
+    ) -> dict[str, Any]:
+        try:
+            signature = inspect.signature(func)
+            pydantic_params = {
+                name: param.annotation
+                for name, param in signature.parameters.items()
+                if (
+                    isinstance(param.annotation, type)
+                    and issubclass(param.annotation, BaseModel)
+                )
+            }
             try:
-                if parse_func:
-                    return json_response(
-                        parse_arguments(parse_func)(NotesClient.inject(func))
-                    )(context, *args, **kwargs)
-                else:
-                    return json_response(
-                        (NotesClient.inject(func)),
-                    )(context, *args, **kwargs)
-            except BaseException as e:
-                return ErrorResponse(data=str(e)).model_dump(by_alias=True)
+                for key, value in kwargs.items():
+                    if (
+                        key in pydantic_params
+                        and not isinstance(value, pydantic_params[key])
+                        and isinstance(value, dict)
+                    ):
+                        kwargs[key] = pydantic_params[key](**value)
+            except ValidationError as e:
+                return ErrorResponse[list[ErrorDetails]](
+                    message="Exception parsing input", data=e.errors()
+                ).model_dump(mode="json", by_alias=True)
 
-        return wrapper
+            return json_response(NotesClient.inject(func))(context, *args, **kwargs)
 
-    return decorator
+        except BaseException as e:
+            return ErrorResponse(data=str(e)).model_dump(by_alias=True)
+
+    return wrapper
 
 
 def permission_check(

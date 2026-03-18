@@ -83,6 +83,40 @@ def test_get_ok(function_context: FunctionContext):
     assert 1 == note_1["category"]
 
 
+def test_get_all_notes_ok(function_context: FunctionContext):
+    sut.add(
+        function_context,
+        **{
+            "text": "Test Note",
+            "subject": "Test Subject",
+            "category": 0,
+        },
+    )
+
+    sut.add(
+        function_context,
+        **{
+            "text": "Test Note 2",
+            "subject": "Test Subject 2",
+            "category": 1,
+        },
+    )
+
+    result = sut.get_all_notes(function_context)
+
+    assert True is result["success"]
+
+    [note_0, note_1] = result["data"]
+
+    assert "Test Note" == note_0["text"]
+    assert "Test Subject" == note_0["subject"]
+    assert 0 == note_0["category"]
+
+    assert "Test Note 2" == note_1["text"]
+    assert "Test Subject 2" == note_1["subject"]
+    assert 1 == note_1["category"]
+
+
 def test_edit_ok(function_context: FunctionContext):
     set_time(174540182.000)
 
