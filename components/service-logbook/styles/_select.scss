@@ -1,4 +1,6 @@
-.filter-select {
+@use './button' as *;
+
+.select-button-group {
   position: relative;
   display: inline-flex;
 
@@ -28,7 +30,7 @@
     }
   }
 
-  &:not(:has(.icon-button)) {
+  &:not(:has(.select-clear-button)) {
     &::after {
       right: 0;
     }
@@ -39,7 +41,10 @@
     }
   }
 
-  .icon-button {
+  .select-clear-button {
+    /* stylelint-disable-next-line scss/at-extend-no-missing-placeholder */
+    @extend .icon-button;
+
     border: 1px solid color-mix(in srgb, transparent, currentcolor 12%);
     border-left: none;
     border-radius: 0 8px 8px 0;

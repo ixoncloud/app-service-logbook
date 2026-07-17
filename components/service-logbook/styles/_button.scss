@@ -18,8 +18,8 @@
   border-radius: 4px;
   overflow: visible;
   font-size: 16px;
-  background-color: var(--card-bg);
-  color: var(--card-color);
+  background-color: var(--uic-background);
+  color: var(--uic-on-background);
 
   &[hidden] {
     display: none;
@@ -33,18 +33,18 @@
   }
 
   &.primary:not([disabled], .disabled) {
-    background-color: var(--primary);
-    color: var(--primary-color);
+    background-color: var(--uic-primary);
+    color: var(--uic-on-primary);
   }
 
   &.accent:not([disabled], .disabled) {
-    background-color: var(--accent);
-    color: var(--accent-color);
+    background-color: var(--uic-secondary);
+    color: var(--uic-on-secondary);
   }
 
   &.warn:not([disabled], .disabled) {
-    background-color: var(--warn);
-    color: white;
+    background-color: var(--uic-error);
+    color: var(--uic-on-error);
   }
 
   &.stroked {
@@ -57,17 +57,17 @@
 
     &.primary:not([disabled], .disabled) {
       background-color: transparent;
-      color: var(--primary);
+      color: var(--uic-primary);
     }
 
     &.accent:not([disabled], .disabled) {
       background-color: transparent;
-      color: var(--accent);
+      color: var(--uic-secondary);
     }
 
     &.warn:not([disabled], .disabled) {
       background-color: transparent;
-      color: var(--warn);
+      color: var(--uic-error);
     }
   }
 }

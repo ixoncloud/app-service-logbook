@@ -99,12 +99,12 @@ export function getBackgroundColor(letter: string) {
     case 'Ż':
       return '#AED581';
     default:
-      return 'rgba(0,0,0,0.38)';
+      return 'var(--mat-sys-outline-variant)';
   }
 }
 
 export function getFirstLetter(from: string | null | undefined) {
-  const letter = from && from.length >= 1 ? upperCase(from.slice(0, 1)) : '';
+  const letter = from && from.trim().length >= 1 ? upperCase(from.trim().slice(0, 1)) : '';
   if (letter && !isNaN(Number(letter))) {
     return '#';
   }

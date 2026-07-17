@@ -64,12 +64,14 @@
 
   $: isNarrow = width !== null ? width <= 460 : false;
   $: isSmall = width !== null ? width <= 400 : false;
-  $: notesWithCategories = derived([notesWithHtml], ([$notes]) => {
-    return (
-      categories.size > 0 &&
-      ($notes?.some(note => note.category !== undefined) ?? false)
-    );
-  });
+  $: notesWithCategories = notesWithHtml
+    ? derived([notesWithHtml], ([$notes]) => {
+        return (
+          categories.size > 0 &&
+          ($notes?.some(note => note.category !== undefined) ?? false)
+        );
+      })
+    : [];
   $: selectedCategoryName = derived([filter], ([$filter]) => {
     const category = getCategory($filter.selectedCategoryId);
     return category ? category.name : translations.CATEGORY;
@@ -806,7 +808,7 @@
       {#if !!$notes?.length}
         {#if !isSmall && categories.size > 0 && !searchInputVisible}
           <div
-            class="filter-select"
+            class="select-button-group"
             data-testid="service-logbook-category-filter"
           >
             <button
@@ -822,7 +824,7 @@
             </button>
             {#if $filter.selectedCategoryId !== null}
               <button
-                class="icon-button"
+                class="select-clear-button"
                 data-testid="service-logbook-category-clear-button"
                 on:click={() =>
                   filter.update(f => ({ ...f, selectedCategoryId: null }))}
@@ -898,7 +900,10 @@
   </div>
   {#if isSmall && !!$notes?.length && categories.size > 0}
     <div class="card-chips">
-      <div class="filter-select" data-testid="service-logbook-category-filter">
+      <div
+        class="select-button-group"
+        data-testid="service-logbook-category-filter"
+      >
         <button
           class="select-button"
           data-testid="service-logbook-category-select-button"
@@ -912,7 +917,7 @@
         </button>
         {#if $filter.selectedCategoryId !== null}
           <button
-            class="icon-button"
+            class="select-clear-button"
             data-testid="service-logbook-category-clear-button"
             on:click={() =>
               filter.update(f => ({ ...f, selectedCategoryId: null }))}
@@ -1030,12 +1035,11 @@
 </div>
 
 <style lang="scss">
-  @use './styles/button' as *;
-  @use './styles/card' as *;
-  @use './styles/list' as *;
-  @use './styles/spinner' as *;
-
-  @use './styles/select' as *;
+  @use './styles/button' as button;
+  @use './styles/card' as card;
+  @use './styles/list' as list;
+  @use './styles/select' as select;
+  @use './styles/spinner' as spinner;
 
   .hidden {
     visibility: hidden;
@@ -1118,14 +1122,14 @@
     align-items: center;
     padding-right: 12px;
     padding-left: 8px;
-    background-color: var(--accent);
+    background-color: var(--uic-secondary);
     line-height: 32px;
     font-size: 14px;
-    color: var(--accent-color);
+    color: var(--uic-on-secondary);
 
     svg {
       margin-right: 4px;
-      fill: var(--accent-color);
+      fill: var(--uic-on-secondary);
     }
   }
 
